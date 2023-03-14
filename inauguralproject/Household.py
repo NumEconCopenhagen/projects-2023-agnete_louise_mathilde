@@ -53,8 +53,13 @@ class HouseholdSpecializationModelClass:
         # a. consumption of market goods
         C = par.wM*LM + par.wF*LF
 
-        # b. home production - this is under the assumption of sigma = 1
-        H = HM**(1-par.alpha)*HF**par.alpha
+        # b. home production
+        if par.sigma == 0:
+            H = pd.min(HM,HF)
+        elif par.sigma == 1:
+            H = HM**(1-par.alpha)*HF**par.alpha
+        else:
+            H = ((1-par.alpha)*HM**((par.sigma-1)/par.sigma+1e-8)+par.alpha*HF**((par.sigma-1)/par.sigma+1e-8))**(par.sigma/(par.sigma+1e-8-1))
 
         # c. total consumption utility
         Q = C**par.omega*H**(1-par.omega)
@@ -99,10 +104,10 @@ class HouseholdSpecializationModelClass:
         opt.LF = LF[j]
         opt.HF = HF[j]
 
-        # e. print
-        if do_print:
-            for k,v in opt.__dict__.items():
-                print(f'{k} = {v:6.4f}')
+        # # e. print
+        # if do_print:
+        #     for k,v in opt.__dict__.items():
+        #         print(f'{k} = {v:6.4f}')
 
         return opt
 
