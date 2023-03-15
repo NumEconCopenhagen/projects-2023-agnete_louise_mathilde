@@ -111,11 +111,89 @@ class HouseholdSpecializationModelClass:
 
         return opt
 
-    def solve(self,do_print=False):
-        """ solve model continously """
+    def solve_continuous(self,do_print=False):
+        """ solve model discretely """
+        
+        par = self.par
+        sol = self.sol
+        opt = SimpleNamespace()
+   
+        # a. all possible choices
+        x = np.linspace(0,24,100)
+        LM,HM,LF,HF = np.meshgrid(x,x,x,x) # all combinations
+ 
+        LM = LM.ravel() # vector 
+        HM = HM.ravel() # ravel orders the elements 
+        LF = LF.ravel()
+        HF = HF.ravel()
 
+        # b. calculate utility
+        u = self.calc_utility(LM,HM,LF,HF)
+    
+        # c. set to minus infinity if constraint is broken
+        I = (LM+HM > 24) | (LF+HF > 24) # | is "or"
+        u[I] = -np.inf 
+    
+        # d. find maximizing argument
+        j = np.argmax(u)
+        
+        opt.LM = LM[j]
+        opt.HM = HM[j]
+        opt.LF = LF[j]
+        opt.HF = HF[j]
+        
+        return opt
+    
+    # def solve(self, wM, wF, do_print=False):
+    #     """ solve model continuously """
+    #     par = self.par
+    #     sol = self.sol
+    #     opt = SimpleNamespace()
 
-        pass    
+    #     # a. define objective function
+    #     def obj_func(x):
+    #         LM = x[0]
+    #         HM = x[1]
+    #         LF = x[2]
+    #         HF = x[3]
+    #         return -self.calc_utility(LM, HM, LF, HF, wM, wF)
+
+    #     # b. define constraints
+    #     def constraint1(x):
+    #         LM = x[0]
+    #         HM = x[1]
+    #         LF = x[2]
+    #         HF = x[3]
+    #         return 24 - LM - HM
+
+    #     def constraint2(x):
+    #         LM = x[0]
+    #         HM = x[1]
+    #         LF = x[2]
+    #         HF = x[3]
+    #         return 24 - LF - HF
+
+    #     # c. initial guess - an equal division of time
+    #     x0 = [12, 12, 12, 12]
+
+    #     # d. solve optimization problem
+    #     bounds = ((0, 24), (0, 24), (0, 24), (0, 24))
+    #     cons = [{'type': 'ineq', 'fun': constraint1}, {'type': 'ineq', 'fun': constraint2}]
+    #     res = optimize.minimize(obj_func, x0, bounds=bounds, constraints=cons)
+
+    #     # e. store optimal values
+    #     opt.LM = res.x[0]
+    #     opt.HM = res.x[1]
+    #     opt.LF = res.x[2]
+    #     opt.HF = res.x[3]
+
+    #     # f. print
+    #     if do_print:
+    #         for k, v in opt.__dict__.items():
+    #             print(f'{k} = {v:6.4f}')
+
+    #     return opt
+
 
     def solve_wF_vec(self,discrete=False):
         """ solve model for vector of female wages """
@@ -132,8 +210,14 @@ class HouseholdSpecializationModelClass:
         y = np.log(sol.HF_vec/sol.HM_vec)
         A = np.vstack([np.ones(x.size),x]).T
         sol.beta0,sol.beta1 = np.linalg.lstsq(A,y,rcond=None)[0]
+
+        object = (sol.beta0 - par.beta0_target)**2 + (sol.beta1 - par.beta1_target)**2
     
     def estimate(self,alpha=None,sigma=None):
         """ estimate alpha and sigma """
 
         pass
+        
+
+
+    
