@@ -44,6 +44,8 @@ class HouseholdSpecializationModelClass:
         sol.beta0 = np.nan
         sol.beta1 = np.nan
 
+
+
     def calc_utility(self,LM,HM,LF,HF):
         """ calculate utility """
 
@@ -72,6 +74,8 @@ class HouseholdSpecializationModelClass:
         disutility = par.nu*(TM**epsilon_/epsilon_+TF**epsilon_/epsilon_)
         
         return utility - disutility
+    
+
 
     def solve_discrete(self,do_print=False):
         """ solve model discretely """
@@ -104,12 +108,13 @@ class HouseholdSpecializationModelClass:
         opt.LF = LF[j]
         opt.HF = HF[j]
 
-        # # e. print
-        # if do_print:
-        # for k,v in opt.__dict__.items():
-        # print(f'{k} = {v:6.4f}')
+        # e. print
+        if do_print:
+        for k,v in opt.__dict__.items():
+        print(f'{k} = {v:6.4f}')
 
         return opt
+
 
     def solve_continuous(self,do_print=False):
         """ solve model discretely """
@@ -145,57 +150,7 @@ class HouseholdSpecializationModelClass:
         
         return opt
     
-    # def solve(self, wM, wF, do_print=False):
-    #     """ solve model continuously """
-    #     par = self.par
-    #     sol = self.sol
-    #     opt = SimpleNamespace()
-
-    #     # a. define objective function
-    #     def obj_func(x):
-    #         LM = x[0]
-    #         HM = x[1]
-    #         LF = x[2]
-    #         HF = x[3]
-    #         return -self.calc_utility(LM, HM, LF, HF, wM, wF)
-
-    #     # b. define constraints
-    #     def constraint1(x):
-    #         LM = x[0]
-    #         HM = x[1]
-    #         LF = x[2]
-    #         HF = x[3]
-    #         return 24 - LM - HM
-
-    #     def constraint2(x):
-    #         LM = x[0]
-    #         HM = x[1]
-    #         LF = x[2]
-    #         HF = x[3]
-    #         return 24 - LF - HF
-
-    #     # c. initial guess - an equal division of time
-    #     x0 = [12, 12, 12, 12]
-
-    #     # d. solve optimization problem
-    #     bounds = ((0, 24), (0, 24), (0, 24), (0, 24))
-    #     cons = [{'type': 'ineq', 'fun': constraint1}, {'type': 'ineq', 'fun': constraint2}]
-    #     res = optimize.minimize(obj_func, x0, bounds=bounds, constraints=cons)
-
-    #     # e. store optimal values
-    #     opt.LM = res.x[0]
-    #     opt.HM = res.x[1]
-    #     opt.LF = res.x[2]
-    #     opt.HF = res.x[3]
-
-    #     # f. print
-    #     if do_print:
-    #         for k, v in opt.__dict__.items():
-    #             print(f'{k} = {v:6.4f}')
-
-    #     return opt
-
-
+   
     def solve_wF_vec(self,discrete=False):
         """ solve model for vector of female wages """
 
