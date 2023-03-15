@@ -141,6 +141,7 @@ class HouseholdSpecializationModelClass:
         opt.HM = HM[j]
         opt.LF = LF[j]
         opt.HF = HF[j]
+
         
         return opt
     
@@ -211,8 +212,7 @@ class HouseholdSpecializationModelClass:
         A = np.vstack([np.ones(x.size),x]).T
         sol.beta0,sol.beta1 = np.linalg.lstsq(A,y,rcond=None)[0]
 
-        object = (sol.beta0 - par.beta0_target)**2 + (sol.beta1 - par.beta1_target)**2
-    
+       
     def estimate(self,alpha=None,sigma=None):
         """ estimate alpha and sigma """
 
