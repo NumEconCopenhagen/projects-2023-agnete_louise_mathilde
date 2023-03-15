@@ -110,8 +110,8 @@ class HouseholdSpecializationModelClass:
 
         # e. print
         if do_print:
-        for k,v in opt.__dict__.items():
-        print(f'{k} = {v:6.4f}')
+            for k,v in opt.__dict__.items():
+                print(f'{k} = {v:6.4f}')
 
         return opt
 
