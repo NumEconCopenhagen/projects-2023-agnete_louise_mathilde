@@ -1,4 +1,4 @@
-# \[Group name\]
+# \[Agnete - Louise - Mathilde\]
 
 **Group members:**
 - Agnete 
