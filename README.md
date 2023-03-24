@@ -1,11 +1,11 @@
 # \[Group name\]
 
 **Group members:**
-- A
-- B
-- C
+- Agnete 
+- Mathilde
+- Louise
 
 This repository contains  
-1. Inaugural project. 
-2. Data project. We fetch data from **source x** on **y** and show that ...
+1. Inaugural project, where we examine how elasticity of substitution and the relative effectiveness in home production affects the ratio "Mens work at home" / "Females work at home" 
+2. Data project. 
 3. Model project. We model ...
