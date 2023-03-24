@@ -6,6 +6,6 @@
 - Louise
 
 This repository contains  
-1. Inaugural project, where we examine how elasticity of substitution and the relative effectiveness in home production affects the ratio "Mens work at home" / "Females work at home" 
+1. Inaugural project where we investigate how the elasticity of substitution and the relative efficiency of home production affect the ratio "Men work at home" / "Women work at home". The code is run by pressing "run all" and wait for approx. 20 minutes.
 2. Data project. 
 3. Model project. We model ...
