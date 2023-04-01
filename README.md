@@ -1,11 +1,11 @@
-# \[Group name\]
+# \[Agnete - Louise - Mathilde\]
 
 **Group members:**
-- A
-- B
-- C
+- Agnete 
+- Mathilde
+- Louise
 
 This repository contains  
-1. Inaugural project. 
-2. Data project. We fetch data from **source x** on **y** and show that ...
+1. Inaugural project where we investigate how the elasticity of substitution and the relative efficiency of home production affect the ratio "Men work at home" / "Women work at home". The code is run by pressing "run all" and wait for approx. 20 minutes.
+2. Data project. 
 3. Model project. We model ...
