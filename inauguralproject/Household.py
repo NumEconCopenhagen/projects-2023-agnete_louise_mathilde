@@ -55,13 +55,19 @@ class HouseholdSpecializationModelClass:
         # a. consumption of market goods
         C = par.wM*LM + par.wF*LF
 
-        # b. home production
+        # b1. define power
+        if par.sigma == 0:
+            power = (par.sigma-1)/(par.sigma+1e-8)
+        else:
+            power = (par.sigma-1)/(par.sigma)
+
+        # b2. home production
         if par.sigma == 0:
             H = pd.min(HM,HF)
         elif par.sigma == 1:
             H = HM**(1-par.alpha)*HF**par.alpha
         else:
-            H = ((1-par.alpha)*HM**((par.sigma-1)/par.sigma+1e-8)+par.alpha*HF**((par.sigma-1)/par.sigma+1e-8))**(par.sigma/(par.sigma+1e-8-1))
+            H = ((1-par.alpha)*HM**(power)+par.alpha*HF**(power))**(1/power)
 
         # c. total consumption utility
         Q = C**par.omega*H**(1-par.omega)
@@ -116,40 +122,42 @@ class HouseholdSpecializationModelClass:
         return opt
 
 
-    def solve_continuous(self,do_print=False):
-        """ solve model discretely """
-        
-        par = self.par
+    def solve_continuous(self, do_print=False):
+        """ solve model continuously """
+
+        par = self.par 
         sol = self.sol
         opt = SimpleNamespace()
-   
-        # a. all possible choices
-        x = np.linspace(0,24,100)
-        LM,HM,LF,HF = np.meshgrid(x,x,x,x) # all combinations
- 
-        LM = LM.ravel() # vector 
-        HM = HM.ravel() # ravel orders the elements 
-        LF = LF.ravel()
-        HF = HF.ravel()
 
-        # b. calculate utility
-        u = self.calc_utility(LM,HM,LF,HF)
-    
-        # c. set to minus infinity if constraint is broken
-        I = (LM+HM > 24) | (LF+HF > 24) # | is "or"
-        u[I] = -np.inf 
-    
-        # d. find maximizing argument
-        j = np.argmax(u)
-        
-        opt.LM = LM[j]
-        opt.HM = HM[j]
-        opt.LF = LF[j]
-        opt.HF = HF[j]
+        # a. get initial guess from solve_discrete
+        opt_discrete = self.solve_discrete()
+        LM_init = opt_discrete.LM
+        HM_init = opt_discrete.HM
 
-        
+        # b. bounds on the hours worked
+        bounds = ((0, 24), (0, 24), (0, 24), (0, 24))
+
+        # c. contraints on the hours worked
+        def cons(x):
+            return [opt.LF + opt.HF - 24, opt.LM + opt.HM - 24]
+
+        # d. initial guess for the hours worked
+        initial_guess = [LM_init, HM_init, 24-LM_init, 24-HM_init]
+
+        # e. constraints on the hours worked
+        constraints = {'type': 'ineq', 'fun': cons}
+
+        # f. solve
+        res = optimize.minimize(self.calc_utility, initial_guess, method='SLSQP', bounds=bounds, constraints=constraints, tol=0)
+
+        # g. print
+        opt.LM = res.x[0]
+        opt.HM = res.x[1]
+        opt.LF = res.x[2]
+        opt.HF = res.x[3]
+
         return opt
-    
+
    
     def solve_wF_vec(self,discrete=False):
         """ solve model for vector of female wages """
