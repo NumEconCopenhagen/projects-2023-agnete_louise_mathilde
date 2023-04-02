@@ -123,38 +123,35 @@ class HouseholdSpecializationModelClass:
 
 
     def solve_continuous(self, do_print=False):
-        """ solve model continuously """
-
-        par = self.par 
+        """ solve model continously """
+        par = self.par
         sol = self.sol
         opt = SimpleNamespace()
 
-        # a. get initial guess from solve_discrete
-        opt_discrete = self.solve_discrete()
-        LM_init = opt_discrete.LM
-        HM_init = opt_discrete.HM
+        def objective(x):
+            LM, HM, LF, HF = x
+            return -self.calc_utility(LM, HM, LF, HF)
 
-        # b. bounds on the hours worked
-        bounds = ((0, 24), (0, 24), (0, 24), (0, 24))
+        def constraintM(x):
+            LM, HM, LF, HF = x
+            return 24-(LM+HM)
+        
+        def constraintF(x):
+            LM, HM, LF, HF = x
+            return 24-(LF+HF)
+        
+        constraints = [{"type":"ineq","fun":constraintF},
+                       {"type":"ineq","fun":constraintM}]
+        intial_guess = [12,12,12,12]
 
-        # c. contraints on the hours worked
-        def cons(x):
-            return [opt.LF + opt.HF - 24, opt.LM + opt.HM - 24]
+        result = optimize.minimize(objective, intial_guess, 
+                                   constraints=constraints, method = "SLSQP")
 
-        # d. initial guess for the hours worked
-        initial_guess = [LM_init, HM_init, 24-LM_init, 24-HM_init]
-
-        # e. constraints on the hours worked
-        constraints = {'type': 'ineq', 'fun': cons}
-
-        # f. solve
-        res = optimize.minimize(self.calc_utility, initial_guess, method='SLSQP', bounds=bounds, constraints=constraints, tol=0)
-
-        # g. print
-        opt.LM = res.x[0]
-        opt.HM = res.x[1]
-        opt.LF = res.x[2]
-        opt.HF = res.x[3]
+        sol.LM = opt.LM = result.x[0]    
+        sol.HM = opt.HM = result.x[1]
+        sol.LF = opt.LF = result.x[2]
+        sol.HF = opt.HF = result.x[3]
+        opt.util = self.calc_utility(opt.LM, opt.HM, opt.LF, opt.HF)
 
         return opt
 
@@ -162,7 +159,24 @@ class HouseholdSpecializationModelClass:
     def solve_wF_vec(self,discrete=False):
         """ solve model for vector of female wages """
 
-        pass
+        par = self.par
+        sol = self.sol
+        
+        for n, i in enumerate(par.wF_vec):
+
+            par.wF = i
+            
+            los = self.solve_continuous()
+
+            sol.LF_vec[n] = los.LF
+            sol.HF_vec[n] = los.HF
+            sol.LM_vec[n] = los.LM
+            sol.HM_vec[n] = los.HM
+
+
+        self.run_regression()    
+
+       
 
     def run_regression(self):
         """ run regression """
@@ -175,12 +189,22 @@ class HouseholdSpecializationModelClass:
         A = np.vstack([np.ones(x.size),x]).T
         sol.beta0,sol.beta1 = np.linalg.lstsq(A,y,rcond=None)[0]
 
-       
+
+    
     def estimate(self,alpha=None,sigma=None):
         """ estimate alpha and sigma """
 
-        pass
-        
+        par = self.par
+        sol = self.sol
 
-
+        def obj(x):
+            self.par.alpha = x[0]
+            self.par.sigma = x[1]
+            self.solve_wF_vec()
+            return np.sum((sol.beta1-sol.beta1_target)**2)
     
+        x0 = [0.5, 0.5]
+        res = optimize.minimize(obj, x0, tol = 1e-8, method = "Nelder-Mead", bounds = [(0.01, 0.99),(0.01, 1.0)])
+
+        return res.x
+       
