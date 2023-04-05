@@ -1,6 +1,6 @@
 # Data analysis project
 
-Our project is titled **PROJECT TITLE** and is about EXPLAIN.
+Our project is titled **Recipients of subsidy to private day-care and day-care of own children by region** and is about just that.
 
 The **results** of the project can be seen from running [dataproject.ipynb](dataproject.ipynb).
 

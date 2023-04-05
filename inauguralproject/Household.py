@@ -127,30 +127,37 @@ class HouseholdSpecializationModelClass:
         par = self.par
         sol = self.sol
         opt = SimpleNamespace()
-
-        def objective(x):
-            LM, HM, LF, HF = x
-            return -self.calc_utility(LM, HM, LF, HF)
-
+     
+        # a. set up contraints
         def constraintM(x):
             LM, HM, LF, HF = x
             return 24-(LM+HM)
-        
         def constraintF(x):
             LM, HM, LF, HF = x
             return 24-(LF+HF)
         
         constraints = [{"type":"ineq","fun":constraintF},
                        {"type":"ineq","fun":constraintM}]
+                
+        # b. calculate utility
+        def objective(x):
+            LM, HM, LF, HF = x
+            return -self.calc_utility(LM, HM, LF, HF)
+        
+        # initial guess        
         intial_guess = [12,12,12,12]
-
-        result = optimize.minimize(objective, intial_guess, 
+    
+        # c. solve
+        result = optimize.minimize(objective, tol = 1e-9, intial_guess, 
                                    constraints=constraints, method = "SLSQP")
 
+        # d. report the optimal values of LM, HM, LF, HF
         sol.LM = opt.LM = result.x[0]    
         sol.HM = opt.HM = result.x[1]
         sol.LF = opt.LF = result.x[2]
         sol.HF = opt.HF = result.x[3]
+
+        # calculate utility
         opt.util = self.calc_utility(opt.LM, opt.HM, opt.LF, opt.HF)
 
         return opt
