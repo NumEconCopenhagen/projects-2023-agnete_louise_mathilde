@@ -1,4 +1,4 @@
-# This py contains the code for question 2-4
+# This py contains the code for question 5
 
 from types import SimpleNamespace
 
@@ -9,7 +9,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import ipywidgets 
 
-class HouseholdSpecializationModelClass:
+class Qfive:
 
     def __init__(self):
         """ setup model """
@@ -22,7 +22,8 @@ class HouseholdSpecializationModelClass:
         par.rho = 2.0
         par.nu = 0.001
         par.epsilon = 1.0
-        par.omega = 0.5 
+        par.omega = 0.5
+        par.new_nu = 0.001
         
         # c. household production
         par.alpha = 0.5
@@ -93,50 +94,11 @@ class HouseholdSpecializationModelClass:
         # d2. disutlity of work
         TM = LM+HM
         TF = LF+HF
-        disutility = par.nu*(TM**e_power/e_power+TF**e_power/e_power)
+        disutility = par.nu*(TM**e_power/e_power+TF**e_power/e_power) + par.new_nu*HM + (1-par.new_nu)*HF
 
         return utility - disutility
 
-            
-    
-    def solve_discrete(self,do_print=False):
-        """ solve model discretely """
-        
-        par = self.par
-        sol = self.sol
-        opt = SimpleNamespace()
-        
-        # a. all possible choices
-        x = np.linspace(0,24,49)
-        LM,HM,LF,HF = np.meshgrid(x,x,x,x) # all combinations
-    
-        LM = LM.ravel() # vector
-        HM = HM.ravel()
-        LF = LF.ravel()
-        HF = HF.ravel()
 
-        # b. calculate utility
-        u = self.calc_utility(LM,HM,LF,HF)
-    
-        # c. set to minus infinity if constraint is broken
-        I = (LM+HM > 24) | (LF+HF > 24) # | is "or"
-        u[I] = -np.inf
-    
-        # d. find maximizing argument
-        j = np.argmax(u)
-        
-        opt.LM = LM[j]
-        opt.HM = HM[j]
-        opt.LF = LF[j]
-        opt.HF = HF[j]
-
-        # e. print
-        if do_print:
-            for k,v in opt.__dict__.items():
-                print(f'{k} = {v:6.4f}')
-
-        return opt
-    
     
     def solve_continous(self,do_print=False):
         """ solve model continously """
@@ -175,36 +137,22 @@ class HouseholdSpecializationModelClass:
         return opt  
     
     
-    def solution_wF_vec(self, discrete=False, do_plot=False, do_print=False):
+    def solution_wF_vec(self, do_plot=False, do_print=False):
         """ solve model (discrete or contionus) for a range of wF"""
 
         par = self.par
         sol = self.sol
     
-        if discrete == True:
             # Solving for wF_vec
-            for i, wF in enumerate(self.par.wF_vec):
-                # Set wF
-                self.par.wF = wF
-                # Solve for optimal choices
-                opt = self.solve_discrete()
-                # Storing results in solution arrays
-                sol.HM_vec[i] = opt.HM
-                sol.HF_vec[i] = opt.HF
-            pass
-
-
-        if discrete == False:
-            # Solving for wF_vec
-            for i, wF in enumerate(self.par.wF_vec):
-                # Set wF for this iteration
-                self.par.wF = wF
-                # Solve for optimal choices
-                opt = self.solve_continous()
-                # Store results in solution arrays
-                sol.HM_vec[i] = opt.HM
-                sol.HF_vec[i] = opt.HF
-            pass
+        for i, wF in enumerate(self.par.wF_vec):
+            # Set wF for this iteration
+            self.par.wF = wF
+            # Solve for optimal choices
+            opt = self.solve_continous()
+            # Store results in solution arrays
+            sol.HM_vec[i] = opt.HM
+            sol.HF_vec[i] = opt.HF
+        pass
         
                        
         # Create the figure 
@@ -235,32 +183,33 @@ class HouseholdSpecializationModelClass:
         A = np.vstack([np.ones(x.size),x]).T
         
         sol.beta0,sol.beta1 = np.linalg.lstsq(A,y,rcond=None)[0]
-       
-    
-    def estimate(self,alpha=None,sigma=None, do_print=False, do_plotb=False):
+      
+
+    def estimateQfive(self,new_nu=None,sigma=None, do_print=False, do_plotb=False):
         """ estimate alpha and sigma """
 
         sol = self.sol
         par = self.par
 
         # Initial guess
-        alpha_guess = 0.5
+        nu_guess = 0.5
         sigma_guess = 1
-        as_guess = (alpha_guess, sigma_guess)
+        ns_guess = (nu_guess, sigma_guess)
 
         # Bounds
         bounds = ((1e-8,1), (1e-8,1.5))
 
         # Empty list to store values tried out in optimization
-        alpha_list = []
+        new_nu_list = []
         sigma_list = []
         # Empty list to store the objective function value
         obj_list = []
 
         # Defining the objective function
         def obj(x):
-            par.alpha, par.sigma = x  # unpack into the list
-            alpha_list.append(x[0])  # Append input values to the list
+            par.alpha = 0.5
+            par.new_nu, par.sigma = x  # unpack into the list
+            new_nu_list.append(x[0])  # Append input values to the list
             sigma_list.append(x[1])  # Append input values to the list
             self.solution_wF_vec()
             self.run_regression()
@@ -270,13 +219,14 @@ class HouseholdSpecializationModelClass:
             return value
 
         # Minimizing the R-squared value with scipy
-        result = optimize.minimize(obj, as_guess, method="Nelder-Mead", 
+        result = optimize.minimize(obj, ns_guess, method="Nelder-Mead", 
                                 bounds=bounds, tol=0.0001)
         pass
     
         # Printing the optimized values
         if  do_print == True:
-            par.alpha, par.sigma = result.x
+            par.alpha = 0.5
+            par.new_nu, par.sigma = result.x
             self.solution_wF_vec()
             self.run_regression()
             value = (abs((par.beta0_target-sol.beta0)**2
@@ -285,6 +235,7 @@ class HouseholdSpecializationModelClass:
             print("Optimized Parameter Values:")
             print(f"Alpha = {par.alpha:6.4f}")
             print(f"Sigma = {par.sigma:6.4f}")
+            print(f"New_nu = {par.new_nu:6.4f}")
 
             print("The Resulting Estimate Values:")
             print(f"Beta0 = {sol.beta0:6.4f}")
@@ -297,8 +248,9 @@ class HouseholdSpecializationModelClass:
 
         # Plotting the values tried out in the optimization
         if do_plotb == True:
-            par.alpha, par.sigma = result.x 
-            alpha_list.append(result.x[0])  
+            par.alpha = 0.5
+            par.new_nu, par.sigma = result.x 
+            new_nu_list.append(result.x[0])  
             sigma_list.append(result.x[1])  
             self.solution_wF_vec()
             self.run_regression()
@@ -309,15 +261,24 @@ class HouseholdSpecializationModelClass:
             fig = plt.figure(figsize=(15, 6))
             ax = fig.add_subplot(111, projection='3d')
             # plot all the values tried out in the optimization in blue
-            ax.scatter(alpha_list, sigma_list, obj_list, c='blue', alpha=0.5, s=10)
+            ax.scatter(new_nu_list, sigma_list, obj_list, c='blue', alpha=0.5, s=10)
             # plot the optimized value in red
-            ax.scatter(par.alpha, par.sigma, value, c='red', marker='o', s=50)
+            ax.scatter(par.new_nu, par.sigma, value, c='red', marker='o', s=50)
             # add labels
-            ax.set_xlabel('Alpha')
+            ax.set_xlabel('Nu_New')
+            ax.set_xlim(0.2, 0.8)
             ax.set_ylabel('Sigma')
+            ax.set_ylim(1, 1.75)
             ax.set_zlabel('Objective Function Value')
             ax.zaxis.labelpad=1/10 # this alters where the photo is cropped.
-            ax.set_zlim(0, 1.2)
+            ax.set_zlim(0, 0.07)
 
             plt.show()
 
+
+
+
+        pass
+
+
+    
