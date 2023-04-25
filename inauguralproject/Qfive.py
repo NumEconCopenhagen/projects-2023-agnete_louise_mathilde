@@ -60,6 +60,8 @@ class Qfive:
         # b1. define power - without these lines, we might devide by zero in the b2. home production
         if par.sigma == 0:
             s_power = (par.sigma-1)/(par.sigma+1e-8)
+        elif par.sigma == 1:
+            s_power = (par.sigma-1)/(par.sigma+1e-8)
         else:
             s_power = (par.sigma-1)/(par.sigma)
 
@@ -75,6 +77,8 @@ class Qfive:
         # c1. define power - without these lines, we might devide by zero in the c2. total consumption utility
         if par.rho == 1:
             r_power = (1-par.rho+1e-8)
+        elif par.rho == 0:
+            r_power = (1-par.rho+1e-8)
         else:
             r_power = (1-par.rho)     
 
@@ -85,6 +89,8 @@ class Qfive:
 
         # d1. define power - without these lines, we might devide by zero in the d2. disutility of work
         if par.epsilon == 0:
+            e_power = 1+1/(par.epsilon+1e-8)
+        elif par.epsilon == 1:
             e_power = 1+1/(par.epsilon+1e-8)
         else:
             e_power = 1+1/par.epsilon
