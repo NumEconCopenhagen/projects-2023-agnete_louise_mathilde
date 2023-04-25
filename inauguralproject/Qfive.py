@@ -60,8 +60,6 @@ class Qfive:
         # b1. define power - without these lines, we might devide by zero in the b2. home production
         if par.sigma == 0:
             s_power = (par.sigma-1)/(par.sigma+1e-8)
-        elif par.sigma == 1:
-            s_power = 0
         else:
             s_power = (par.sigma-1)/(par.sigma)
 
@@ -69,7 +67,7 @@ class Qfive:
         if par.sigma == 0:
             H = pd.min(HM,HF)
         elif par.sigma == 1:
-            H = HM**(1-par.alpha)*HF**par.alpha
+            H = HM**(1-par.alpha + 1e-8)*HF**(par.alpha + 1e-8)
         else:
             H = ((1-par.alpha)*HM**(s_power)+par.alpha*HF**(s_power))**(1/s_power)
 
