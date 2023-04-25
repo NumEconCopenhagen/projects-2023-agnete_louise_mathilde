@@ -6,9 +6,11 @@ The **results** of the project can be seen from running [dataproject.ipynb](data
 
 We apply the **following datasets**:
 
-1. dataX.csv (*source*) 
-1. dataY.csv (*source*)
+1. DAGTIL4 (Statsitics Denmark)
+2. BY2 (Statsitics Denmark)
 
 **Dependencies:** Apart from a standard Anaconda Python 3 installation, the project requires the following installations:
 
 ``pip install matplotlib-venn``
+``pip install pandas-datareader``
+``pip install git+https://github.com/elben10/pydst``
