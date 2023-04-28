@@ -59,9 +59,9 @@ class Qfive:
 
         # b1. define power - without these lines, we might devide by zero in the b2. home production
         if par.sigma == 0:
-            s_power = (par.sigma-1)/(par.sigma+1e-8)
+            s_power = (par.sigma-1)/(par.sigma+0.001)
         elif par.sigma == 1:
-            s_power = (par.sigma-1)/(par.sigma+1e-8)
+            s_power = (par.sigma-1)/(par.sigma+0.001)
         else:
             s_power = (par.sigma-1)/(par.sigma)
 
@@ -76,9 +76,9 @@ class Qfive:
 
         # c1. define power - without these lines, we might devide by zero in the c2. total consumption utility
         if par.rho == 1:
-            r_power = (1-par.rho+1e-8)
+            r_power = (1-par.rho+0.001)
         elif par.rho == 0:
-            r_power = (1-par.rho+1e-8)
+            r_power = (1-par.rho+0.001)
         else:
             r_power = (1-par.rho)     
 
@@ -89,15 +89,19 @@ class Qfive:
 
         # d1. define power - without these lines, we might devide by zero in the d2. disutility of work
         if par.epsilon == 0:
-            e_power = 1+1/(par.epsilon+1e-8)
+            e_power = 1+1/(par.epsilon+0.001)
         elif par.epsilon == 1:
-            e_power = 1+1/(par.epsilon+1e-8)
+            e_power = 1+1/(par.epsilon+0.001)
         else:
             e_power = 1+1/par.epsilon
 
         # d2. disutlity of work
         TM = LM+HM
         TF = LF+HF
+
+        if par.new_nu > 1:
+            par.new_nu = 1
+
         disutility = par.nu*(TM**e_power/e_power+TF**e_power/e_power) + par.new_nu*HM + (1-par.new_nu)*HF
 
         return utility - disutility
@@ -245,6 +249,9 @@ class Qfive:
             print(f"Beta0 = {sol.beta0:6.4f}")
             print(f"Beta1 = {sol.beta1:6.4f}")
 
+            print("The optimal value of H_F/H_M is:")
+            print(f"H_F/H_M = {np.exp(sol.beta0):6.4f}")
+            
             print("The Minimized Value Resulting from the Optimization:")
             print(f"Squared Residual = {value:6.4f}")
 

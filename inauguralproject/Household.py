@@ -58,9 +58,9 @@ class HouseholdSpecializationModelClass:
 
         # b1. define power - without these lines, we might devide by zero in the b2. home production
         if par.sigma == 0:
-            s_power = (par.sigma-1)/(par.sigma+1e-8)
+            s_power = (par.sigma-1)/(par.sigma+0.001)
         elif par.sigma == 1:
-            s_power = (par.sigma-1)/(par.sigma+1e-8)
+            s_power = (par.sigma-1)/(par.sigma+0.001)
         else:
             s_power = (par.sigma-1)/(par.sigma)
 
@@ -68,15 +68,15 @@ class HouseholdSpecializationModelClass:
         if par.sigma == 0:
             H = pd.min(HM,HF)
         elif par.sigma == 1:
-            H = HM**(1-par.alpha + 1e-8 )*HF**(par.alpha + 1e-8)
+            H = HM**(1-par.alpha)*HF**(par.alpha)
         else:
             H = ((1-par.alpha)*HM**(s_power)+par.alpha*HF**(s_power))**(1/s_power)
 
         # c1. define power - without these lines, we might devide by zero in the c2. total consumption utility
         if par.rho == 1:
-            r_power = (1-par.rho+1e-8)
+            r_power = (1-par.rho+0.001)
         elif par.rho == 0:
-            r_power = (1-par.rho+1e-8)
+            r_power = (1-par.rho+0.001)
         else:
             r_power = (1-par.rho)     
 
@@ -87,9 +87,9 @@ class HouseholdSpecializationModelClass:
 
         # d1. define power - without these lines, we might devide by zero in the d2. disutility of work
         if par.epsilon == 0:
-            e_power = 1+1/(par.epsilon+1e-8)
+            e_power = 1+1/(par.epsilo+0.001)
         elif par.epsilon == 1:
-            e_power = 1+1/(par.epsilon+1e-8)
+            e_power = 1+1/(par.epsilon+0.001)
         else:
             e_power = 1+1/par.epsilon
 
@@ -293,6 +293,9 @@ class HouseholdSpecializationModelClass:
             print(f"Beta0 = {sol.beta0:6.4f}")
             print(f"Beta1 = {sol.beta1:6.4f}")
 
+            print("The optimal value of H_F/H_M is:")
+            print(f"H_F/H_M = {np.exp(sol.beta0):6.4f}")
+            
             print("The Minimized Value Resulting from the Optimization:")
             print(f"Squared Residual = {value:6.4f}")
 
