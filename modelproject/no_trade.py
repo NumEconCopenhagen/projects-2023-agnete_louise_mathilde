@@ -42,14 +42,22 @@ def portugal_production():
     cons = [{'type': 'eq', 'fun': budget_constraint}]
 
     # Minimize the negative utility function subject to the budget constraint using the SLSQP algorithm
-    result = minimize(utility, x0, method='SLSQP', bounds=bounds, constraints=cons)
-
+    result = optimize.minimize(utility, x0,
+                               method='SLSQP',
+                               constraints=cons,
+                               bounds=bounds,
+                               options={'disp':True},
+                               tol=1e-8)
+    
     # Extract the optimal values of x
     x_opt = result.x
     u_opt = -result.fun
 
+    wine_p=x_opt[0]
+    cloth_p=x_opt[1]
+
     # Print the results
-    return print("Portugal produces {:.2f} units of wine and {:.2f} units of cloth. And, the resulting utility level is {:.2f}".format(x_opt[0], x_opt[1], u_opt))
+    print("Portugal produces {:.2f} units of wine and {:.2f} units of cloth. And, the resulting utility level is {:.2f}".format(wine_p, cloth_p, u_opt))
 
 
 
@@ -75,12 +83,20 @@ def england_production():
     cons = [{'type': 'eq', 'fun': budget_constraint}]
 
     # Minimize the negative utility function subject to the budget constraint using the SLSQP algorithm
-    result = minimize(utility, x0, method='SLSQP', bounds=bounds, constraints=cons)
+    result = optimize.minimize(utility, x0,
+                               method='SLSQP',
+                               constraints=cons,
+                               bounds=bounds,
+                               options={'disp':True},
+                               tol=1e-8)
 
     # Extract the optimal values of x
     x_opt = result.x
     u_opt = -result.fun
 
+    wine_e=x_opt[0]
+    cloth_e=x_opt[1]
+
     # Print the results
-    return print("England produces {:.2f} units of wine and {:.2f} units of cloth. And, the resulting utility level is {:.2f}".format(x_opt[0], x_opt[1], u_opt))
+    print("England produces {:.2f} units of wine and {:.2f} units of cloth. And, the resulting utility level is {:.2f}".format(wine_e, cloth_e, u_opt))
 
