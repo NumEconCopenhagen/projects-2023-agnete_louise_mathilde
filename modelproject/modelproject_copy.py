@@ -48,23 +48,16 @@ def optimal_trade():
     def utility_p(x):
         u_p = ((x[0]+x[5])**0.5) * ((x[2]+x[7])**(1-0.5))
         return u_p
-    
-    #  # The Marginal Rate of Substitution (MRS) between wine / cloth for Portugal
-    # def MRS_p(x):
-    #     return (x[0]+x[5]) / ((x[2]+x[7]))
-    
+        
     def utility_e(x):
         u_e = ((x[4]+x[1])**0.5) * ((x[6]+x[3])**(1-0.5))
         return u_e
-    
-    # # The Marginal Rate of Substitution (MRS) between wine / cloth for England
-    # def MRS_e(x):
-    #     return (x[4]+x[1]) / ((x[6]+x[3]))
-    
+        
     def utility(x):
         u_e = utility_e(x)
         u_p = utility_p(x)
         return -(u_e * u_p)
+    
       
     # Define the constraints dictionary
     cons = [] 
@@ -78,33 +71,27 @@ def optimal_trade():
     # The x[5] and the x[7] are the exports of wine and cloth from Portugal to England.
     # The x[1] and the x[3] are the exports of wine and cloth from England to Portugal.
 
-    # # England will not buy cloth from Portugal for more than 1.2 wine. 
-    # cons.append({'type': 'ineq', 'fun': lambda x: x[7] - 120/100 * x[1]})
-    
-    # # Portugal will not buy cloth from England for more than 8/9 wine.
-    # cons.append({'type': 'ineq', 'fun': lambda x: x[3] - 80/90 * x[5] })
-          
-    # Define the optimal trade decision based on MRS_p
-    # def trade_p():
-    #     if MRS_p(x_opt_p) > 90/80:
-    #         x_opt_p[5] = 0
-    #         x_opt_p[7] = model.par.hours * 0.5 / 100
-    #     elif MRS_p(x_opt_p) < 80/90:
-    #         x_opt_p[5] = model.par.hours * 0.5 / 120
-    #         x_opt_p[7] = 0
+    # # The Marginal Rate of Substitution (MRS) between wine / cloth for Portugal
+    # def MRS_p(x):
+    #     MRS_p = (x[0] + x[5]) / (x[2] + x[7])
+    #     return MRS_p 
 
+    # # The Marginal Rate of Substitution (MRS) between wine / cloth for England
+    # def MRS_e(x):
+    #     MRS_e = (x[4] + x[1]) / (x[6] + x[3]) 
+    #     return MRS_e
+    
+    # # Define the optimal trade decision based on MRS_p
+    # def trade_p():
+    #     return MRS_p(x_opt_p) - 120/100
+    
     # # Define the optimal trade decision based on MRS_e
     # def trade_e():
-    #     if MRS_e(x_opt_p) > 100/120:
-    #         x_opt_p[1] = 0
-    #         x_opt_p[3] = model.par.hours * 0.5 / 100
-    #     elif MRS_e(x_opt_p) < 120/100:
-    #         x_opt_p[1] = model.par.hours * 0.5 / 80
-    #         x_opt_p[3] = 0
+    #     return MRS_e(x_opt_p) - 80/90
     
-    # cons.append({'type': 'ineq', 'fun': lambda x: trade_p()})
-    # cons.append({'type': 'ineq', 'fun': lambda x: trade_e()})
-
+    cons.append({'type': 'ineq', 'fun': lambda x: (x[0] + x[5]) - 120/100 *(x[2] + x[7])})
+    cons.append({'type': 'ineq', 'fun': lambda x: (x[4] + x[1]) - 80/90 * (x[6] + x[3])})
+   
     # # Consumption of wine and cloth must be greater than or equal to what it is without trade
     # def consumption_england(x):
     #     wine_e, cloth_e = nt.england_production()
