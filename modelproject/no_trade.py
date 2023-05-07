@@ -59,9 +59,8 @@ class no_trade_class():
         cloth_p=x_opt[1]
 
         # Print the results
-        print("Portugal produces {:.2f} units of wine and {:.2f} units of cloth. And, the resulting utility level is {:.2f}".format(wine_p, cloth_p, u_opt))
-
-
+        print("Portugal produces {:.2f} units of wine and {:.2f} units of cloth.".format(wine_p, cloth_p))
+        print("And, the resulting utility level is {:.2f}".format(u_opt))
 
     def england_production():
 
@@ -100,5 +99,5 @@ class no_trade_class():
         cloth_e=x_opt[1]
 
         # Print the results
-        print("England produces {:.2f} units of wine and {:.2f} units of cloth. And, the resulting utility level is {:.2f}".format(wine_e, cloth_e, u_opt))
-
+        print("England produces {:.2f} units of wine and {:.2f} units of cloth.".format(wine_e, cloth_e))
+        print("And, the resulting utility level is {:.2f}".format(u_opt))
