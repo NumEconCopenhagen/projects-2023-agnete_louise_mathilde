@@ -57,27 +57,25 @@ class PortugalEnglandTradeModel:
 
         # utilty 
         self.par.alpha_p = 0.5
+
         self.par.alpha_p_vec = np.linspace(0,1,100)
         self.par.alpha_e = 0.5
 
+
         
-def optimal_trade(do_plot=False, do_print=False):
+def optimal_trade(alpha_p, do_plot=False, do_print=False):
     """ Solve the Portugal-England trade model """
 
     model = PortugalEnglandTradeModel()
     opt = SimpleNamespace()
-
+    model.par.alpha_p = alpha_p
+        
     x_opt_p = None
 
     # Define the utility function to be maximized 
     def utility_p(x):
         u_p = ((x[0]+x[5])**model.par.alpha_p) * ((x[2]+x[7])**(1-model.par.alpha_p))
-        if do_plot == True:
-            u_p_vec = ((x[0]+x[5])**model.par.alpha_p_vec) * ((x[2]+x[7])**(1-model.par.alpha_p_vec))
-        if do_plot == True:
-            return u_p_vec
-        else:
-            return u_p 
+        return u_p 
         
     def utility_e(x):
         u_e = ((x[4]+x[1])**model.par.alpha_e) * ((x[6]+x[3])**(1-model.par.alpha_e))
@@ -118,7 +116,7 @@ def optimal_trade(do_plot=False, do_print=False):
                             method='SLSQP',
                             constraints=cons,
                             bounds=bounds,
-                            options={'disp':True},
+                            options={'disp':do_print},
                             tol=1e-8)
 
     # Extract the optimal values of x
@@ -170,6 +168,8 @@ def optimal_trade(do_plot=False, do_print=False):
         print("The utility for England is {:.2f}".format(u_e))
     pass
 
+    return opt
+
 
 def Different_alpha_p(do_plot=False):
     """Varying the value of alpha_p holding alpha_e fixed at 0.5"""
@@ -197,34 +197,46 @@ def Different_alpha_p(do_plot=False):
         # Solving for alpha_p_vec
         for i, alpha_p in enumerate(model.par.alpha_p_vec):
             # Set alpha for this iteration
-            model.par.alpha_p_vec = alpha_p
+            model.par.alpha_p=alpha_p
             # Solve for optimal choices
-            opt = optimal_trade(do_plot=True, do_print=False)
+            opt = optimal_trade(alpha_p,do_plot=True, do_print=False)
             # production
-            sol.wine_p_pro[i] = opt.wine_p_pro
-            sol.cloth_p_pro[i] = opt.x_opt_p[2]+opt.x_opt_p[3]
-            sol.wine_e_pro[i] = opt.x_opt_p[4]+opt.x_opt_p[5]
-            sol.cloth_e_pro[i] = opt.x_opt_p[6]+opt.x_opt_p[7]
+            sol.wine_p_pro[i] =opt.wine_p_pro
+            sol.cloth_p_pro[i] = opt.cloth_p_pro
+            sol.wine_e_pro[i] = opt.wine_e_pro
+            sol.cloth_e_pro[i] = opt.cloth_e_pro
             # consumption 
-            sol.wine_p_consum[i] = opt.x_opt_p[0]+opt.x_opt_p[5]
-            sol.cloth_p_consum[i] = opt.x_opt_p[2]+opt.x_opt_p[7]
-            sol.wine_e_consum[i] = opt.x_opt_p[4]+opt.x_opt_p[1]
-            sol.cloth_e_consum[i] = opt.x_opt_p[6]+opt.x_opt_p[3]
+            sol.wine_p_consum[i] = opt.wine_p_consum
+            sol.cloth_p_consum[i] = opt.cloth_p_consum
+            sol.wine_e_consum[i] = opt.wine_e_consum
+            sol.cloth_e_consum[i] = opt.cloth_e_consum
             # utility
             sol.u_p[i] = opt.u_p
             sol.u_e[i] = opt.u_e
-                    
+            # print(sol.wine_p_pro[i])
+            # print(model.par.alpha_p)
+                        
     # Create the figure 
     fig = plt.figure()
     ax = fig.add_subplot(1, 1, 1)
     # plot
-    ax.plot(par.alpha_p_vec, sol.wine_p_pro, color='black', lw=2)
+    ax.plot(par.alpha_p_vec, sol.wine_p_pro, color='red', lw=2, label='Wine Production in Portugal')
+    ax.plot(par.alpha_p_vec, sol.cloth_p_pro, color='blue', lw=2, label='Cloth Production in Portugal')
+    ax.plot(par.alpha_p_vec, sol.wine_e_pro, color='orange', lw=2, label='Wine Production in England')
+    ax.plot(par.alpha_p_vec, sol.cloth_e_pro, color='green', lw=2, label='Cloth Production in England')
+    ax.plot(par.alpha_p_vec, sol.wine_p_consum, color='red', lw=2, linestyle='--', label='Wine Consumption in Portugal')
+    ax.plot(par.alpha_p_vec, sol.cloth_p_consum, color='blue', lw=2, linestyle='--', label='Cloth Consumption in Portugal')
+    ax.plot(par.alpha_p_vec, sol.wine_e_consum, color='orange', lw=2, linestyle='--', label='Wine Consumption in England')
+    ax.plot(par.alpha_p_vec, sol.cloth_e_consum, color='green', lw=2, linestyle='--', label='Cloth Consumption in England')
     ax.grid(True)
+    # show list of labels, out of the figure
+    ax.legend(loc='upper left', bbox_to_anchor=(1.05, 1), frameon=False)
     # add labels
-    plt.xlabel('$\alpha_p$')
-    plt.ylabel('$Production & Consumption$')
-    ax.set_title("Plot of The Effect of $\alpha_p$ on Production and Consumption in Portugal and England")
+    plt.xlabel('alpha_p')
+    plt.ylabel('Production & Consumption')
+    ax.set_title("Plot of The Effect of alpha_p on Production and Consumption in Portugal and England")
     plt.show()
+
 
     return
 
