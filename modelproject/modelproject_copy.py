@@ -91,6 +91,25 @@ def optimal_trade():
     # The x[5] and the x[7] are the exports of wine and cloth from Portugal to England.
     # The x[1] and the x[3] are the exports of wine and cloth from England to Portugal.
 
+    # The MRS defines how much wine Portugal is willing to give to get one cloth
+    def MRS_p(x):
+        MRS_p =  (x[2] + x[7])/(x[0] + x[5])
+        return MRS_p
+    
+    # The MRS defines how much wine England is willing to give to get one cloth
+    def MRS_e(x):
+        MRS_e =  (x[6] + x[3])/(x[4] + x[1])
+        return MRS_e
+    
+    # The MRS must be equal for both countries
+    cons.append({'type': 'eq', 'fun': lambda x: MRS_p(x) - MRS_e(x)})
+
+    # The MRS_e and MRS_p must be within the range oppurtunity cost
+    cons.append({'type': 'ineq', 'fun': lambda x: MRS_p(x) - model.par.oc_w_p})
+    cons.append({'type': 'ineq', 'fun': lambda x: model.par.oc_w_e - MRS_e(x)})
+    cons.append({'type': 'ineq', 'fun': lambda x: MRS_e(x) - model.par.oc_c_e})
+    cons.append({'type': 'ineq', 'fun': lambda x: model.par.oc_c_p - MRS_p(x)})
+    
     # Utility of Portugal without trade - they spend half their time on wine
     def utility_notrade_p():
         u_p_notrade = ((model.par.hours/(2*model.par.w_p))**model.par.alpha) * ((model.par.hours/(2*model.par.c_p))**(1-model.par.alpha))
@@ -104,10 +123,6 @@ def optimal_trade():
     # The utility must not decrease when trading
     cons.append({'type': 'ineq', 'fun': lambda x: utility_p(x) - utility_notrade_p()})
     cons.append({'type': 'ineq', 'fun': lambda x: utility_e(x) - utility_notrade_e()})
-
-    # The prices on trade
-    
-
 
     # # The Marginal Rate of Substitution (MRS) = MU_wine / MU_cloth for Portugal
     # def MRS_p(x):
