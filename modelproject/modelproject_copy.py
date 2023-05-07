@@ -52,6 +52,10 @@ class PortugalEnglandTradeModel:
         self.par.oc_w_e = self.par.temp_c_e/self.par.temp_w_e
         self.par.oc_c_e = self.par.temp_w_e/self.par.temp_c_e
 
+        # Assuming comparative advantage
+        self.par.price_w = np.linspace(self.par.oc_w_p,self.par.oc_w_e,100)
+        self.par.price_c = np.linspace(self.par.oc_c_e,self.par.oc_c_p,100)
+
         # utilty 
         self.par.alpha = 0.5
 
@@ -102,6 +106,7 @@ def optimal_trade():
     cons.append({'type': 'ineq', 'fun': lambda x: utility_e(x) - utility_notrade_e()})
 
     # The prices on trade
+    
 
 
     # # The Marginal Rate of Substitution (MRS) = MU_wine / MU_cloth for Portugal
