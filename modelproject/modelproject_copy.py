@@ -8,7 +8,7 @@ from scipy.optimize import minimize
 
 # local modules
 import modelproject
-import no_trade as nt
+from no_trade import no_trade_class as ntc
 
 from types import SimpleNamespace
 import time
@@ -34,11 +34,28 @@ class PortugalEnglandTradeModel:
         self.par.w_e = 120
         self.par.c_p = 90
         self.par.c_e = 100 
+        # relative productivity
+        self.par.wc_p = self.par.w_p/self.par.c_p
+        self.par.wc_e = self.par.w_e/self.par.c_e
         
         # hours
-        self.par.hours = 1000
+        self.par.hours = 8760
 
+        # opportunity cost
+        self.par.temp_w_p = self.par.hours/self.par.w_p
+        self.par.temp_c_p = self.par.hours/self.par.c_p
+        self.par.temp_w_e = self.par.hours/self.par.w_e
+        self.par.temp_c_e = self.par.hours/self.par.c_e
 
+        self.par.oc_w_p = self.par.temp_c_p/self.par.temp_w_p
+        self.par.oc_c_p = self.par.temp_w_p/self.par.temp_c_p
+        self.par.oc_w_e = self.par.temp_c_e/self.par.temp_w_e
+        self.par.oc_c_e = self.par.temp_w_e/self.par.temp_c_e
+
+        # utilty 
+        self.par.alpha = 0.5
+
+        
 def optimal_trade():
     """ Solve the Portugal-England trade model """
     model = PortugalEnglandTradeModel()
@@ -46,11 +63,11 @@ def optimal_trade():
 
     # Define the utility function to be maximized 
     def utility_p(x):
-        u_p = ((x[0]+x[5])**0.5) * ((x[2]+x[7])**(1-0.5))
+        u_p = ((x[0]+x[5])** model.par.alpha) * ((x[2]+x[7])**(1-model.par.alpha))
         return u_p
         
     def utility_e(x):
-        u_e = ((x[4]+x[1])**0.5) * ((x[6]+x[3])**(1-0.5))
+        u_e = ((x[4]+x[1])**model.par.alpha) * ((x[6]+x[3])**(1-model.par.alpha))
         return u_e
         
     def utility(x):
@@ -58,52 +75,60 @@ def optimal_trade():
         u_p = utility_p(x)
         return -(u_e * u_p)
     
-      
     # Define the constraints dictionary
     cons = [] 
 
     # Define the budget constraint for Portugal
-    cons.append({'type': 'eq', 'fun': lambda x: 80 * (x[0] + x[1]) - model.par.hours + 90 * (x[2] + x[3])})
-   
+    cons.append({'type': 'eq', 'fun': lambda x: model.par.w_p * (x[0] + x[1]) - model.par.hours + model.par.c_p * (x[2] + x[3])})
+
     # Define the budget constraint for England
-    cons.append({'type': 'eq', 'fun': lambda x: 120 * (x[4] + x[5]) - model.par.hours + 100 * (x[6] + x[7])})
+    cons.append({'type': 'eq', 'fun': lambda x: model.par.w_e * (x[4] + x[5]) - model.par.hours + model.par.c_e * (x[6] + x[7])})
 
     # The x[5] and the x[7] are the exports of wine and cloth from Portugal to England.
     # The x[1] and the x[3] are the exports of wine and cloth from England to Portugal.
 
-    # # The Marginal Rate of Substitution (MRS) between wine / cloth for Portugal
+    # Utility of Portugal without trade - they spend half their time on wine
+    def utility_notrade_p():
+        u_p_notrade = ((model.par.hours/(2*model.par.w_p))**model.par.alpha) * ((model.par.hours/(2*model.par.c_p))**(1-model.par.alpha))
+        return u_p_notrade
+    
+    # Utility of England without trade - they spend half their time on cloth
+    def utility_notrade_e():
+        u_e_notrade = ((model.par.hours/(2*model.par.w_e))**model.par.alpha) * ((model.par.hours/(2*model.par.c_e))**(1-model.par.alpha))
+        return u_e_notrade
+
+    # The utility must not decrease when trading
+    cons.append({'type': 'ineq', 'fun': lambda x: utility_p(x) - utility_notrade_p()})
+    cons.append({'type': 'ineq', 'fun': lambda x: utility_e(x) - utility_notrade_e()})
+
+    # The prices on trade
+
+
+    # # The Marginal Rate of Substitution (MRS) = MU_wine / MU_cloth for Portugal
     # def MRS_p(x):
-    #     MRS_p = (x[0] + x[5]) / (x[2] + x[7])
+    #     MRS_p =  (x[2] + x[7])/(x[0] + x[5])
     #     return MRS_p 
 
     # # The Marginal Rate of Substitution (MRS) between wine / cloth for England
     # def MRS_e(x):
-    #     MRS_e = (x[4] + x[1]) / (x[6] + x[3]) 
+    #     MRS_e = (x[6] + x[3])/(x[4] + x[1]) 
     #     return MRS_e
     
     # # Define the optimal trade decision based on MRS_p
-    # def trade_p():
-    #     return MRS_p(x_opt_p) - 120/100
+    # # Amount of wine Portugal will give to get one cloth is less than model.par.wc_p=80/90
+    # cons.append({'type': 'ineq', 'fun': lambda x: MRS_p(x) - model.par.wc_p })
+    # cons.append({'type': 'ineq', 'fun': lambda x: MRS_e(x) - model.par.wc_e })
+
+    # The utility of Portugal must not decrease when trading
+    # def utility_notrade_p(x):
+    #     u_p_notrade = ntc.portugal_production(x)
+    #     return u_p_notrade
     
-    # # Define the optimal trade decision based on MRS_e
-    # def trade_e():
-    #     return MRS_e(x_opt_p) - 80/90
-    
-    cons.append({'type': 'ineq', 'fun': lambda x: (x[0] + x[5]) - 120/100 *(x[2] + x[7])})
-    cons.append({'type': 'ineq', 'fun': lambda x: (x[4] + x[1]) - 80/90 * (x[6] + x[3])})
-   
-    # # Consumption of wine and cloth must be greater than or equal to what it is without trade
-    # def consumption_england(x):
-    #     wine_e, cloth_e = nt.england_production()
-    #     return (x[0] - x[1] + x[5] - wine_e), (x[2] - x[3] + x[7] - cloth_e)
-    
-    # def consumption_portugal(x):
-    #     wine_p, cloth_p = nt.portugal_production()
-    #     return (x[4] - x[5] + x[1] - wine_p), (x[6] - x[7] + x[3] - cloth_p)
-    
-    # cons.append({'type': 'ineq', 'fun': consumption_england})
-    # cons.append({'type': 'ineq', 'fun': consumption_portugal})
-    
+    # # The utility of England must not decrease when trading
+    # def utility_notrade_e(x):
+    #     u_e_notrade = ntc.england_production(x)
+    #     return u_e_notrade
+
     # Define the bounds on x
     bounds = ((0, 100), (0, 100), (0, 100), (0, 100),
               (0, 100), (0, 100), (0, 100), (0, 100))
@@ -114,11 +139,11 @@ def optimal_trade():
     
     # Minimize the negative utility function subject to the budget constraint using the SLSQP algorithm
     result = optimize.minimize(utility, x0,
-                               method='SLSQP',
-                               constraints=cons,
-                               bounds=bounds,
-                               options={'disp':True},
-                               tol=1e-8)
+                            method='SLSQP',
+                            constraints=cons,
+                            bounds=bounds,
+                            options={'disp':True},
+                            tol=1e-8)
 
     # Extract the optimal values of x
     x_opt_p = result.x
@@ -141,11 +166,14 @@ def optimal_trade():
     
     # Print the results
     print("The optimal production levels for Portugal are {:.2f} units of wine and {:.2f} units of cloth".format(wine_p_pro, cloth_p_pro))
+    print("The export of wine from Portugal to England is {:.2f} units".format(x_opt_p[1]))
+    print("The export of cloth from Portugal to England is {:.2f} units".format(x_opt_p[3]))
     print("The consumption levels for Portugal are {:.2f} units of wine and {:.2f} units of cloth".format(wine_p_consum, cloth_p_consum))
     print("The utility for Portugal is {:.2f}".format(u_p))
     print('\n')
     print("The optimal production levels for England are {:.2f} units of wine and {:.2f} units of cloth".format(wine_e_pro, cloth_e_pro))
+    print("The export of wine from England to Portugal is {:.2f} units".format(x_opt_p[5]))
+    print("The export of cloth from England to Portugal is {:.2f} units".format(x_opt_p[7]))
     print("The consumption levels for England are {:.2f} units of wine and {:.2f} units of cloth".format(wine_e_consum, cloth_e_consum))
     print("The utility for England is {:.2f}".format(u_e))
-  
-  
+
