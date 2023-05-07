@@ -61,16 +61,23 @@ class PortugalEnglandTradeModel:
         self.par.alpha_e = 0.5
 
         
-def optimal_trade():
+def optimal_trade(do_plot=False, do_print=False):
     """ Solve the Portugal-England trade model """
 
     model = PortugalEnglandTradeModel()
+    opt = SimpleNamespace()
+
     x_opt_p = None
 
     # Define the utility function to be maximized 
     def utility_p(x):
-        u_p = ((x[0]+x[5])** model.par.alpha_p) * ((x[2]+x[7])**(1-model.par.alpha_p))
-        return u_p
+        u_p = ((x[0]+x[5])**model.par.alpha_p) * ((x[2]+x[7])**(1-model.par.alpha_p))
+        if do_plot == True:
+            u_p_vec = ((x[0]+x[5])**model.par.alpha_p_vec) * ((x[2]+x[7])**(1-model.par.alpha_p_vec))
+        if do_plot == True:
+            return u_p_vec
+        else:
+            return u_p 
         
     def utility_e(x):
         u_e = ((x[4]+x[1])**model.par.alpha_e) * ((x[6]+x[3])**(1-model.par.alpha_e))
@@ -80,17 +87,17 @@ def optimal_trade():
         u_e = utility_e(x)
         u_p = utility_p(x)
         return -(u_e + u_p)
-    
+
     # Define the constraints dictionary
     cons = [] 
 
     # Define the budget constraint for Portugal
     cons.append({'type': 'eq', 'fun': lambda x: 
-                 (x[0] + x[5]) + model.par.c_e/model.par.w_e * (x[2] + x[7])- model.par.hours/model.par.w_p})
+                (x[0] + x[5]) + model.par.c_e/model.par.w_e * (x[2] + x[7])- model.par.hours/model.par.w_p})
 
     # Define the budget constraint for England
     cons.append({'type': 'eq', 'fun': lambda x: 
-                 model.par.w_p / model.par.c_p * (x[4] + x[1]) + (x[6] + x[3]) - model.par.hours/model.par.c_e})
+                model.par.w_p / model.par.c_p * (x[4] + x[1]) + (x[6] + x[3]) - model.par.hours/model.par.c_e})
 
     cons.append({'type': 'ineq', 'fun': lambda x: (x[0]+x[1]) - 1/model.par.oc_w_p * (x[0]+x[5])})
     cons.append({'type': 'ineq', 'fun': lambda x: (x[6]+x[7]) - 1/model.par.oc_c_e * (x[4]+x[1])})
@@ -100,11 +107,11 @@ def optimal_trade():
 
     # Define the bounds on x
     bounds = ((0, 100), (0, 100), (0, 100), (0, 100),
-              (0, 100), (0, 100), (0, 100), (0, 100))
+            (0, 100), (0, 100), (0, 100), (0, 100))
 
     # Define the initial guess for x
     x0 = [2, 2, 2, 2,
-          2, 2, 2, 2]
+        2, 2, 2, 2]
     
     # Minimize the negative utility function subject to the budget constraint using the SLSQP algorithm
     result = optimize.minimize(utility, x0,
@@ -132,36 +139,93 @@ def optimal_trade():
     # utility 
     u_p = ((x_opt_p[0]+x_opt_p[5])**0.5) * ((x_opt_p[2]+x_opt_p[7])**(1-0.5))
     u_e = ((x_opt_p[4]+x_opt_p[1])**0.5) * ((x_opt_p[6]+x_opt_p[3])**(1-0.5))
+
+    # production
+    opt.wine_p_pro = x_opt_p[0]+x_opt_p[1]
+    opt.cloth_p_pro = x_opt_p[2]+x_opt_p[3]
+    opt.wine_e_pro = x_opt_p[4]+x_opt_p[5]
+    opt.cloth_e_pro = x_opt_p[6]+x_opt_p[7]
+    # consumption 
+    opt.wine_p_consum = x_opt_p[0]+x_opt_p[5]
+    opt.cloth_p_consum = x_opt_p[2]+x_opt_p[7]
+    opt.wine_e_consum = x_opt_p[4]+x_opt_p[1]
+    opt.cloth_e_consum = x_opt_p[6]+x_opt_p[3]
+    # utility 
+    opt.u_p = ((x_opt_p[0]+x_opt_p[5])**0.5) * ((x_opt_p[2]+x_opt_p[7])**(1-0.5))
+    opt.u_e = ((x_opt_p[4]+x_opt_p[1])**0.5) * ((x_opt_p[6]+x_opt_p[3])**(1-0.5))
+
     
     # Print the results
-    print("The optimal production levels for Portugal are {:.2f} units of wine and {:.2f} units of cloth".format(wine_p_pro, cloth_p_pro))
-    print("The export of wine from Portugal to England is {:.2f} units".format(x_opt_p[1]))
-    print("The export of cloth from Portugal to England is {:.2f} units".format(x_opt_p[3]))
-    print("The consumption levels for Portugal are {:.2f} units of wine and {:.2f} units of cloth".format(wine_p_consum, cloth_p_consum))
-    print("The utility for Portugal is {:.2f}".format(u_p))
-    print('\n')
-    print("The optimal production levels for England are {:.2f} units of wine and {:.2f} units of cloth".format(wine_e_pro, cloth_e_pro))
-    print("The export of wine from England to Portugal is {:.2f} units".format(x_opt_p[5]))
-    print("The export of cloth from England to Portugal is {:.2f} units".format(x_opt_p[7]))
-    print("The consumption levels for England are {:.2f} units of wine and {:.2f} units of cloth".format(wine_e_consum, cloth_e_consum))
-    print("The utility for England is {:.2f}".format(u_e))
+    if do_print == True:
+        print("The optimal production levels for Portugal are {:.2f} units of wine and {:.2f} units of cloth".format(wine_p_pro, cloth_p_pro))
+        print("The export of wine from Portugal to England is {:.2f} units".format(x_opt_p[1]))
+        print("The export of cloth from Portugal to England is {:.2f} units".format(x_opt_p[3]))
+        print("The consumption levels for Portugal are {:.2f} units of wine and {:.2f} units of cloth".format(wine_p_consum, cloth_p_consum))
+        print("The utility for Portugal is {:.2f}".format(u_p))
+        print('\n')
+        print("The optimal production levels for England are {:.2f} units of wine and {:.2f} units of cloth".format(wine_e_pro, cloth_e_pro))
+        print("The export of wine from England to Portugal is {:.2f} units".format(x_opt_p[5]))
+        print("The export of cloth from England to Portugal is {:.2f} units".format(x_opt_p[7]))
+        print("The consumption levels for England are {:.2f} units of wine and {:.2f} units of cloth".format(wine_e_consum, cloth_e_consum))
+        print("The utility for England is {:.2f}".format(u_e))
+    pass
 
 
+def Different_alpha_p(do_plot=False):
+    """Varying the value of alpha_p holding alpha_e fixed at 0.5"""
+    """Figure that shows producion and consumption of both England and Portugal"""
+    """On the x-axis we have the value of alpha_p and on the y-axis we have the production and consumption of both England and Portugal"""
 
-    def figure():
-        """Varying the value of alpha_p holding alpha_e fixed at 0.5"""
-        """Figure that shows producion and consumption of both England and Portugal"""
-        """On the x-axis we have the value of alpha_p and on the y-axis we have the production and consumption of both England and Portugal"""
-    
     model = PortugalEnglandTradeModel()
-    x_opt_p = None
+    # opt = SimpleNamespace()
+    par = model.par
+    sol = model.sol
 
+    #initializing solution arrays
+    sol.wine_p_pro = np.zeros(model.par.alpha_p_vec.size)
+    sol.cloth_p_pro = np.zeros(model.par.alpha_p_vec.size)
+    sol.wine_e_pro = np.zeros(model.par.alpha_p_vec.size)
+    sol.cloth_e_pro = np.zeros(model.par.alpha_p_vec.size)
+    sol.wine_p_consum = np.zeros(model.par.alpha_p_vec.size)
+    sol.cloth_p_consum = np.zeros(model.par.alpha_p_vec.size)
+    sol.wine_e_consum = np.zeros(model.par.alpha_p_vec.size)
+    sol.cloth_e_consum = np.zeros(model.par.alpha_p_vec.size)
+    sol.u_p = np.zeros(model.par.alpha_p_vec.size)
+    sol.u_e = np.zeros(model.par.alpha_p_vec.size)
 
+    if do_plot == True:  
+        # Solving for alpha_p_vec
+        for i, alpha_p in enumerate(model.par.alpha_p_vec):
+            # Set alpha for this iteration
+            model.par.alpha_p_vec = alpha_p
+            # Solve for optimal choices
+            opt = optimal_trade(do_plot=True, do_print=False)
+            # production
+            sol.wine_p_pro[i] = opt.wine_p_pro
+            sol.cloth_p_pro[i] = opt.x_opt_p[2]+opt.x_opt_p[3]
+            sol.wine_e_pro[i] = opt.x_opt_p[4]+opt.x_opt_p[5]
+            sol.cloth_e_pro[i] = opt.x_opt_p[6]+opt.x_opt_p[7]
+            # consumption 
+            sol.wine_p_consum[i] = opt.x_opt_p[0]+opt.x_opt_p[5]
+            sol.cloth_p_consum[i] = opt.x_opt_p[2]+opt.x_opt_p[7]
+            sol.wine_e_consum[i] = opt.x_opt_p[4]+opt.x_opt_p[1]
+            sol.cloth_e_consum[i] = opt.x_opt_p[6]+opt.x_opt_p[3]
+            # utility
+            sol.u_p[i] = opt.u_p
+            sol.u_e[i] = opt.u_e
+                    
+    # Create the figure 
+    fig = plt.figure()
+    ax = fig.add_subplot(1, 1, 1)
+    # plot
+    ax.plot(par.alpha_p_vec, sol.wine_p_pro, color='black', lw=2)
+    ax.grid(True)
+    # add labels
+    plt.xlabel('$\alpha_p$')
+    plt.ylabel('$Production & Consumption$')
+    ax.set_title("Plot of The Effect of $\alpha_p$ on Production and Consumption in Portugal and England")
+    plt.show()
 
-    # foreach alpha in alpha_p_vec perform the optmization in optimal_trade()
-    for alpha in model.par.alpha_p_vec:
-
-        pass
-
+    return
 
 
