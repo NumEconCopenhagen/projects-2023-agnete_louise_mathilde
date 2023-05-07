@@ -24,8 +24,10 @@ from scipy.optimize import minimize
 
 class PortugalEnglandTradeModel:
     """ Class for solving the Portugal-England trade model """
+
     def __init__(self):
         """ setup model """
+
         self.par = SimpleNamespace()
         self.sol = SimpleNamespace()
 
@@ -34,6 +36,7 @@ class PortugalEnglandTradeModel:
         self.par.w_e = 120
         self.par.c_p = 90
         self.par.c_e = 100 
+
         # relative productivity
         self.par.wc_p = self.par.w_p/self.par.c_p
         self.par.wc_e = self.par.w_e/self.par.c_e
@@ -52,26 +55,24 @@ class PortugalEnglandTradeModel:
         self.par.oc_w_e = self.par.temp_c_e/self.par.temp_w_e
         self.par.oc_c_e = self.par.temp_w_e/self.par.temp_c_e
 
-        # Assuming comparative advantage
-        self.par.price_w = np.linspace(self.par.oc_w_p,self.par.oc_w_e,100)
-        self.par.price_c = np.linspace(self.par.oc_c_e,self.par.oc_c_p,100)
-
         # utilty 
-        self.par.alpha = 0.5
-
+        self.par.alpha_p = 0.5
+        self.par.alpha_e = 0.5
+        
         
 def optimal_trade():
     """ Solve the Portugal-England trade model """
+
     model = PortugalEnglandTradeModel()
     x_opt_p = None
 
     # Define the utility function to be maximized 
     def utility_p(x):
-        u_p = ((x[0]+x[5])** model.par.alpha) * ((x[2]+x[7])**(1-model.par.alpha))
+        u_p = ((x[0]+x[5])** model.par.alpha_p) * ((x[2]+x[7])**(1-model.par.alpha_p))
         return u_p
         
     def utility_e(x):
-        u_e = ((x[4]+x[1])**model.par.alpha) * ((x[6]+x[3])**(1-model.par.alpha))
+        u_e = ((x[4]+x[1])**model.par.alpha_e) * ((x[6]+x[3])**(1-model.par.alpha_e))
         return u_e
         
     def utility(x):
@@ -91,50 +92,11 @@ def optimal_trade():
     cons.append({'type': 'eq', 'fun': lambda x: 
                  model.par.w_p / model.par.c_p * (x[4] + x[1]) + (x[6] + x[3]) - model.par.hours/model.par.c_e})
 
-    # # Define the budget constraint for Portugal
-    # cons.append({'type': 'eq', 'fun': lambda x: 
-    #              model.par.w_p * (x[0] + x[1]) - model.par.hours + model.par.c_p * (x[2] + x[3])})
-
-    # # Define the budget constraint for England
-    # cons.append({'type': 'eq', 'fun': lambda x: 
-    #              model.par.w_e * (x[4] + x[5]) - model.par.hours + model.par.c_e * (x[6] + x[7])})
-    
-
     cons.append({'type': 'ineq', 'fun': lambda x: (x[0]+x[1]) - 1/model.par.oc_w_p * (x[0]+x[5])})
     cons.append({'type': 'ineq', 'fun': lambda x: (x[6]+x[7]) - 1/model.par.oc_c_e * (x[4]+x[1])})
     
     # The x[5] and the x[7] are the exports of wine and cloth from Portugal to England.
     # The x[1] and the x[3] are the exports of wine and cloth from England to Portugal.
-
-    # # The MRS defines how much wine Portugal is willing to give to get one cloth
-    # def MRS_p(x):
-    #     MRS_p =  (x[2] + x[7])/(x[0] + x[5])
-    #     return MRS_p
-    
-    # # The MRS defines how much wine England is willing to give to get one cloth
-    # def MRS_e(x):
-    #     MRS_e =  (x[6] + x[3])/(x[4] + x[1])
-    #     return MRS_e
-    
-    # # The MRS must be equal for both countries
-    # cons.append({'type': 'eq', 'fun': lambda x: MRS_p(x) - MRS_e(x)})
-
-    # # The MRS_e and MRS_p must be within the range oppurtunity cost
-
-    
-    # # Utility of Portugal without trade - they spend half their time on wine
-    # def utility_notrade_p():
-    #     u_p_notrade = ((model.par.hours/(2*model.par.w_p))**model.par.alpha) * ((model.par.hours/(2*model.par.c_p))**(1-model.par.alpha))
-    #     return u_p_notrade
-    
-    # # Utility of England without trade - they spend half their time on cloth
-    # def utility_notrade_e():
-    #     u_e_notrade = ((model.par.hours/(2*model.par.w_e))**model.par.alpha) * ((model.par.hours/(2*model.par.c_e))**(1-model.par.alpha))
-    #     return u_e_notrade
-
-    # # The utility must not decrease when trading
-    # cons.append({'type': 'ineq', 'fun': lambda x: utility_p(x) - utility_notrade_p()})
-    # cons.append({'type': 'ineq', 'fun': lambda x: utility_e(x) - utility_notrade_e()})
 
     # Define the bounds on x
     bounds = ((0, 100), (0, 100), (0, 100), (0, 100),
