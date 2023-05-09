@@ -20,14 +20,14 @@ from scipy.optimize import minimize
 
 class no_trade_class():
 
-    def portugal_production():
+    def portugal_production(Option = False, do_print = True):
             # Define the utility function
         def utility(x):
             alpha = 0.5
             u = (x[0]**alpha) * (x[1]**(1-alpha))
             return -u
 
-        # The aviailable hours are 1000, and the productivity of Portugal is as stated in the modelproject.ipynb file
+        # The aviailable hours are 8760, and the productivity of Portugal is as stated in the modelproject.ipynb file
         def budget_constraint(x):
             return x[0] - 8760/80 + 90/80 * x[1]
 
@@ -45,7 +45,7 @@ class no_trade_class():
                                 method='SLSQP',
                                 constraints=cons,
                                 bounds=bounds,
-                                options={'disp':True},
+                                options={'disp':Option},
                                 tol=1e-8)
         
         # Extract the optimal values of x
@@ -56,10 +56,13 @@ class no_trade_class():
         cloth_p=x_opt[1]
 
         # Print the results
-        print("Portugal produces {:.2f} units of wine and {:.2f} units of cloth.".format(wine_p, cloth_p))
-        print("And, the resulting utility level is {:.2f}".format(u_opt))
+        if do_print:
+            print("Portugal produces {:.2f} units of wine and {:.2f} units of cloth.".format(wine_p, cloth_p))
+            print("And, the resulting utility level is {:.2f}".format(u_opt))
 
-    def england_production():
+        return wine_p, cloth_p, u_opt
+    
+    def england_production(Option = False, do_print = True):
 
     # Define the utility function
         def utility(x):
@@ -85,7 +88,7 @@ class no_trade_class():
                                 method='SLSQP',
                                 constraints=cons,
                                 bounds=bounds,
-                                options={'disp':True},
+                                options={'disp':Option},
                                 tol=1e-8)
 
         # Extract the optimal values of x
@@ -96,8 +99,11 @@ class no_trade_class():
         cloth_e=x_opt[1]
 
         # Print the results
-        print("England produces {:.2f} units of wine and {:.2f} units of cloth.".format(wine_e, cloth_e))
-        print("And, the resulting utility level is {:.2f}".format(u_opt))
+        if do_print:
+            print("England produces {:.2f} units of wine and {:.2f} units of cloth.".format(wine_e, cloth_e))
+            print("And, the resulting utility level is {:.2f}".format(u_opt))
+
+        return wine_e, cloth_e, u_opt
 
 
 
