@@ -71,7 +71,8 @@ def optimal_trade(alpha_p=True,do_plot=False, do_print=False):
     opt = SimpleNamespace()
 
     model.par.alpha_p = alpha_p
-        
+    alpha_p=0.5
+
     x_opt_p = None
 
     # Define the utility function to be maximized 
@@ -99,8 +100,8 @@ def optimal_trade(alpha_p=True,do_plot=False, do_print=False):
     # cons.append({'type': 'eq', 'fun': lambda x: 
     #             model.par.w_p / model.par.c_p * (x[4] + x[1]) + (x[6] + x[3]) - model.par.hours_e/model.par.c_e})
 
-    # cons.append({'type': 'ineq', 'fun': lambda x: (x[0]+x[1]) - 1/model.par.oc_w_p * (x[0]+x[5])})
-    # cons.append({'type': 'ineq', 'fun': lambda x: (x[6]+x[7]) - 1/model.par.oc_c_e * (x[4]+x[1])})
+    cons.append({'type': 'ineq', 'fun': lambda x: (x[0] + x[1]) - model.par.oc_w_p * (x[0] + x[5])})
+    cons.append({'type': 'ineq', 'fun': lambda x: (x[6] + x[7]) - model.par.oc_c_e * (x[4] + x[1])})
 
     # Define the limitations to Portugals production of wine and cloth
     cons.append({'type': 'eq', 'fun': lambda x: model.par.w_p * (x[0] + x[1]) + model.par.c_p * (x[2] + x[3]) - model.par.hours_p})
@@ -108,24 +109,28 @@ def optimal_trade(alpha_p=True,do_plot=False, do_print=False):
     # Define the limitations to Englands production of wine and cloth
     cons.append({'type': 'eq', 'fun': lambda x: model.par.w_e * (x[4] + x[5]) + model.par.c_e * (x[6] + x[7]) - model.par.hours_e})  
     
-    # Terms of trade for cloth
-    cons.append({'type': 'ineq', 'fun': lambda x: (x[7]) - model.par.c_p/model.par.w_p * (x[1])})
-    cons.append({'type': 'ineq', 'fun': lambda x: model.par.c_e/model.par.w_p * (x[5]) - (x[7])})
-
-    # Terms of trade for wine
-    cons.append({'type': 'ineq', 'fun': lambda x: (x[1]) - model.par.w_e/model.par.c_e * (x[7])})
-    cons.append({'type': 'ineq', 'fun': lambda x: model.par.c_p/model.par.w_p * (x[3]) - (x[1])})
+    # # Terms of trade for cloth
+    # cons.append({'type': 'ineq', 'fun': lambda x: (x[7]) - model.par.c_p/model.par.w_p * (x[1])})
+    
+    # # cons.append({'type': 'ineq', 'fun': lambda x: model.par.c_e/model.par.w_p * (x[5]) - (x[3]) 
+    # #              - model.par.c_p/model.par.w_p * (x[1])})
+    
+    # # Terms of trade for wine
+    # cons.append({'type': 'ineq', 'fun': lambda x: (x[1]) - model.par.w_e/model.par.c_e * (x[7])})
+    
+    # cons.append({'type': 'ineq', 'fun': lambda x: model.par.c_p/model.par.w_p * (x[3]) - (x[5]) 
+    #              - model.par.w_e/model.par.c_e * (x[7])})
     
     # The x[5] and the x[7] are the exports of wine and cloth from Portugal to England.
     # The x[1] and the x[3] are the exports of wine and cloth from England to Portugal.
     
     # Define the bounds on x
     bounds = ((0, 100), (0, 100), (0, 100), (0, 100),
-            (0, 100), (0, 100), (0, 100), (0, 100))
+              (0, 100), (0, 100), (0, 100), (0, 100))
 
     # Define the initial guess for x
     x0 = [2, 2, 2, 2,
-        2, 2, 2, 2]
+          2, 2, 2, 2]
     
     # Minimize the negative utility function subject to the budget constraint using the SLSQP algorithm
     result = optimize.minimize(utility, x0,
