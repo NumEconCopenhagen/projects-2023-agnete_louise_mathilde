@@ -44,30 +44,32 @@ class PortugalEnglandTradeModel:
         # hours
         self.par.hours = 8760
 
-        # opportunity cost
-        self.par.temp_w_p = self.par.hours/self.par.w_p
-        self.par.temp_c_p = self.par.hours/self.par.c_p
-        self.par.temp_w_e = self.par.hours/self.par.w_e
-        self.par.temp_c_e = self.par.hours/self.par.c_e
+        self.par.hours_p = self.par.hours
+        self.par.hours_e = self.par.hours
 
-        self.par.oc_w_p = self.par.temp_c_p/self.par.temp_w_p
-        self.par.oc_c_p = self.par.temp_w_p/self.par.temp_c_p
-        self.par.oc_w_e = self.par.temp_c_e/self.par.temp_w_e
-        self.par.oc_c_e = self.par.temp_w_e/self.par.temp_c_e
+        # opportunity cost
+        self.par.temp_w_p = self.par.hours_p/self.par.w_p
+        self.par.temp_c_p = self.par.hours_p/self.par.c_p
+        self.par.temp_w_e = self.par.hours_e/self.par.w_e
+        self.par.temp_c_e = self.par.hours_e/self.par.c_e
+
+        self.par.oc_w_p = 1/(self.par.temp_c_p/self.par.temp_w_p)
+        self.par.oc_c_p = 1/(self.par.temp_w_p/self.par.temp_c_p)
+        self.par.oc_w_e = 1/(self.par.temp_c_e/self.par.temp_w_e)
+        self.par.oc_c_e = 1/(self.par.temp_w_e/self.par.temp_c_e)
 
         # utilty 
         self.par.alpha_p = 0.5
-
         self.par.alpha_p_vec = np.linspace(0,1,100)
         self.par.alpha_e = 0.5
 
-
         
-def optimal_trade(alpha_p, do_plot=False, do_print=False):
+def optimal_trade(alpha_p=True,do_plot=False, do_print=False):
     """ Solve the Portugal-England trade model """
 
     model = PortugalEnglandTradeModel()
     opt = SimpleNamespace()
+
     model.par.alpha_p = alpha_p
         
     x_opt_p = None
@@ -89,20 +91,34 @@ def optimal_trade(alpha_p, do_plot=False, do_print=False):
     # Define the constraints dictionary
     cons = [] 
 
-    # Define the budget constraint for Portugal
+    # Define the "effective budget contraint" for Portugal when trading with England
     cons.append({'type': 'eq', 'fun': lambda x: 
-                (x[0] + x[5]) + model.par.c_e/model.par.w_e * (x[2] + x[7])- model.par.hours/model.par.w_p})
+                (x[0] + x[5]) + model.par.c_e/model.par.w_e * (x[2] + x[7])- model.par.hours_p/model.par.w_p})
 
-    # Define the budget constraint for England
+    # Define the "effective budget contraint" for England when trading with Portugal
     cons.append({'type': 'eq', 'fun': lambda x: 
-                model.par.w_p / model.par.c_p * (x[4] + x[1]) + (x[6] + x[3]) - model.par.hours/model.par.c_e})
+                model.par.w_p / model.par.c_p * (x[4] + x[1]) + (x[6] + x[3]) - model.par.hours_e/model.par.c_e})
 
-    cons.append({'type': 'ineq', 'fun': lambda x: (x[0]+x[1]) - 1/model.par.oc_w_p * (x[0]+x[5])})
-    cons.append({'type': 'ineq', 'fun': lambda x: (x[6]+x[7]) - 1/model.par.oc_c_e * (x[4]+x[1])})
+    # cons.append({'type': 'ineq', 'fun': lambda x: (x[0]+x[1]) - 1/model.par.oc_w_p * (x[0]+x[5])})
+    # cons.append({'type': 'ineq', 'fun': lambda x: (x[6]+x[7]) - 1/model.par.oc_c_e * (x[4]+x[1])})
+
+    # # Define the limitations to Portugals production of wine and cloth
+    # cons.append({'type': 'eq', 'fun': lambda x: model.par.w_p * (x[0] + x[1]) + model.par.c_p * (x[2] + x[3]) - model.par.hours_p})
+
+    # # Define the limitations to Englands production of wine and cloth
+    # cons.append({'type': 'eq', 'fun': lambda x: model.par.w_e * (x[4] + x[5]) + model.par.c_e * (x[6] + x[7]) - model.par.hours_e})  
+    
+    # Terms of trade for cloth
+    cons.append({'type': 'ineq', 'fun': lambda x: (x[7]) - model.par.c_p/model.par.w_p * (x[1])})
+    cons.append({'type': 'ineq', 'fun': lambda x: model.par.c_e/model.par.w_p * (x[5]) - (x[7])})
+
+    # Terms of trade for wine
+    cons.append({'type': 'ineq', 'fun': lambda x: (x[1]) - model.par.w_e/model.par.c_e * (x[7])})
+    cons.append({'type': 'ineq', 'fun': lambda x: model.par.c_p/model.par.w_p * (x[3]) - (x[1])})
     
     # The x[5] and the x[7] are the exports of wine and cloth from Portugal to England.
     # The x[1] and the x[3] are the exports of wine and cloth from England to Portugal.
-
+    
     # Define the bounds on x
     bounds = ((0, 100), (0, 100), (0, 100), (0, 100),
             (0, 100), (0, 100), (0, 100), (0, 100))
