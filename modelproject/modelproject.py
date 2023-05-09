@@ -92,6 +92,12 @@ def optimal_trade(alpha_p=True,do_plot=False, do_print=False):
     # Define the constraints dictionary
     cons = [] 
 
+    # Define the limitations to Portugals production of wine and cloth
+    cons.append({'type': 'eq', 'fun': lambda x: model.par.w_p * (x[0] + x[1]) + model.par.c_p * (x[2] + x[3]) - model.par.hours_p})
+
+    # Define the limitations to Englands production of wine and cloth
+    cons.append({'type': 'eq', 'fun': lambda x: model.par.w_e * (x[4] + x[5]) + model.par.c_e * (x[6] + x[7]) - model.par.hours_e})  
+
     # # Define the "effective budget contraint" for Portugal when trading with England
     # cons.append({'type': 'eq', 'fun': lambda x: 
     #             (x[0] + x[5]) + model.par.c_e/model.par.w_e * (x[2] + x[7])- model.par.hours_p/model.par.w_p})
@@ -102,12 +108,6 @@ def optimal_trade(alpha_p=True,do_plot=False, do_print=False):
 
     cons.append({'type': 'ineq', 'fun': lambda x: (x[0] + x[1]) - model.par.oc_w_p * (x[0] + x[5])})
     cons.append({'type': 'ineq', 'fun': lambda x: (x[6] + x[7]) - model.par.oc_c_e * (x[4] + x[1])})
-
-    # Define the limitations to Portugals production of wine and cloth
-    cons.append({'type': 'eq', 'fun': lambda x: model.par.w_p * (x[0] + x[1]) + model.par.c_p * (x[2] + x[3]) - model.par.hours_p})
-
-    # Define the limitations to Englands production of wine and cloth
-    cons.append({'type': 'eq', 'fun': lambda x: model.par.w_e * (x[4] + x[5]) + model.par.c_e * (x[6] + x[7]) - model.par.hours_e})  
     
     # # Terms of trade for cloth
     # cons.append({'type': 'ineq', 'fun': lambda x: (x[7]) - model.par.c_p/model.par.w_p * (x[1])})
