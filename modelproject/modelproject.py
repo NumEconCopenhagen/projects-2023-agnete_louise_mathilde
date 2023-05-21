@@ -107,8 +107,8 @@ def optimal_trade(alpha_p=True,do_plot=False, do_print=False):
     cons.append({'type': 'eq', 'fun': constraint_trade})
 
     # The utility  must not be less the utility without trade
-    wine_p, cloth_p, u_opt_p = ntc.portugal_production(Option=False, do_print=False)
-    wine_e, cloth_e, u_opt_e = ntc.england_production(Option=False, do_print=False)
+    wine_p, cloth_p, u_opt_p = ntc.no_trade_production(Option=False, do_print=False, hours_1 = 90, hours_2 = 80, max_hours = 8760, country = 'Portugal')
+    wine_e, cloth_e, u_opt_e = ntc.no_trade_production(Option=False, do_print=False, hours_1 = 100, hours_2 = 120, max_hours = 8760, country = 'England')
 
     cons.append({'type': 'ineq', 'fun': lambda x: utility_p(x) - u_opt_p})
     cons.append({'type': 'ineq', 'fun': lambda x: utility_e(x) - u_opt_e})

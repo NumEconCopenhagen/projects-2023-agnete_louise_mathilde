@@ -166,5 +166,5 @@ class Plot_before_trade():
         plt.title('Production Possibility Frontiers before trade')
         plt.xlabel('Wine')
         plt.ylabel('Cloth')
-        plt.legend()
+        plt.legend(loc='upper left', bbox_to_anchor=(1.05, 1), frameon=False)
         plt.show()
