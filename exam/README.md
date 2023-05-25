@@ -1,6 +1,6 @@
 # Exam Project
 
-Our project is titled **EXAM** and it is about whatever jeppe thought would be fun.
+Our project is titled **EXAM** and it is about whatever Jeppe thought would be fun.
 
 The results of the project can be seen from running [exam.ipynb](exam.ipynb).
 

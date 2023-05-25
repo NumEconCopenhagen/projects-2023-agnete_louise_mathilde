@@ -257,3 +257,82 @@ class Exercise2_4:
             H_values.append(H)
 
         return max_H, max_delta, H_values
+    
+
+class Exercise2_5:
+    "Class setting up the model from exercise 2_5"
+
+    def __init__(self):
+        """ setup model """
+        self.par = SimpleNamespace()
+
+        # Baseline parameters
+        self.par.eta = 0.5
+        self.par.w = 1.0
+        self.par.rho = 0.90
+        self.par.iota = 0.01
+        self.par.sigma = 0.10
+        self.par.R = np.power(1 + 0.01, 1 / 12)
+        self.par.delta = 0.05
+
+    def calculate_expected_value(self, eta):
+        # Set the initial values
+        kappa_t_minus_1 = 1
+        ell_t_minus_1 = 0
+
+        # Set the number of shock series
+        K = 10000
+
+        # Initialize the sum variable
+        H_values = []
+
+        # Set the random seed
+        np.random.seed(2023)
+
+        # Generate K shock series
+        for k in range(K):
+            sum_h = 0
+
+            # Generate 120 random shocks
+            epsilon = np.random.normal(loc=-0.5 * self.par.sigma ** 2, scale=self.par.sigma, size=120)
+
+            # Initialize the array to store all ell_t values
+            ell_t_array = np.zeros(120)
+
+            for t in range(120):
+                # Calculate kappa_t using the AR(1) process
+                log_kappa_t = self.par.rho * np.log(kappa_t_minus_1) + epsilon[t]
+                kappa_t = np.exp(log_kappa_t)
+
+                # Calculate ell_t using the policy
+                ell_t = ((1 - self.par.eta) * kappa_t / self.par.w) ** (1 / self.par.eta)
+
+                # Update ell_t_array with the current ell_t value
+                ell_t_array[t] = ell_t
+
+                # Calculate the profit for the current time period
+                if np.abs(np.mean(ell_t_array[:t]) - ell_t) > self.par.delta:
+                    h_t = self.par.R * (-t) * (
+                            kappa_t * ell_t * (1 - self.par.eta) - self.par.w * ell_t - (
+                            ell_t != ell_t_minus_1) * self.par.iota)
+                else:
+                    h_t = self.par.R * (-t) * (
+                            kappa_t * ell_t_minus_1 * (1 - self.par.eta) - self.par.w * ell_t_minus_1)
+
+                # Update the sum variable
+                sum_h += h_t
+
+                # Update the values for the next iteration
+                kappa_t_minus_1 = kappa_t
+                ell_t_minus_1 = ell_t
+
+            # Calculate the average for the current shock series at t=120, i.e. the average of the ex post value of the salon conditional on the shock series
+            avg_h = sum_h / 120
+
+            # Add the average to the list of H values
+            H_values.append(avg_h)
+
+        # Calculate the final ex ante expected value of the salon
+        H = np.mean(H_values)
+
+        return H
